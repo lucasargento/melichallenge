@@ -1,0 +1,13 @@
+account_id
+date
+transaction_details
+value_date
+withdrawal_amt
+deposit_amt
+balance_amt
+city
+device
+transactionType
+month
+date_diff
+target_category

@@ -1,0 +1,4 @@
+# Ignorar todo lo que esté en la carpeta model_weights
+weights/
+__pycache__/
+.ipynb_checkpoints/
