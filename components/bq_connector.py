@@ -8,14 +8,22 @@ import os
 from datetime import datetime
 
 class BatchFetcher:
-    def __init__(self, file_path: str = "bank_transactions.parquet"):
+    def __init__(
+            self, 
+            mode: str = "inference",
+            file_path: str = "bank_transactions.parquet", 
+            out_sample_path: str = "bank_transactions_outsample.parquet",
+        ):
         """
         Initialize the BatchFetcher with the path to the parquet file.
 
         params
             file_path: Path to the parquet file.
         """
-        self.file_path = file_path
+        if mode == "inference":
+            self.file_path = out_sample_path
+        else:
+            self.file_path = file_path
 
     def load_data(self) -> pd.DataFrame:
         """

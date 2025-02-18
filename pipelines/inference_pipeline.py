@@ -1,6 +1,7 @@
 from components.preprocessor import Preprocessor
-from components.pipeline import ClassificationPipeline
+from components.classifier import ClassificationPipeline
 from components.bq_connector import BatchFetcher
+import time
 
 def run_inference():
     '''
@@ -35,4 +36,8 @@ def run_inference():
         return None
     
 if __name__ == "__main__":
+    start_time = time.time()
     run_inference()
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"Elapsed training time: {elapsed_time:.2f} seconds")

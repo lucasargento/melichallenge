@@ -35,4 +35,16 @@ def create_extra_features(
     )
     # Calculate the difference between 'value_date' and 'date'
     X[date_diff_col] = (X[value_date_col] - X[date_col]).dt.days
+    
+    # Compress low frequency categories
+    classes = X.category.value_counts().index.tolist()
+    
+    # TODO move this to a config file
+    low_freq = ['Pets & Pet Care', 'Travel',
+       'Insurance', 'Transportation', 'Health & Wellness', 'Entertainment',
+       'Education', 'Childcare & Parenting']
+    not_low_freq = [x for x in classes if x not in low_freq]
+    X['target_category'] = X['category'].apply(lambda x: 'others' if x not in not_low_freq else x)
+    X.drop("category", axis=1, inplace=True)
+    
     return X

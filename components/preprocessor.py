@@ -13,7 +13,9 @@ from .utils.qa_functions import (
 from .utils.feature_functions import create_extra_features
 
 class Preprocessor:
-    def __init__(self, date_col: str = "date", value_date_col: str = "value_date", model_features_path: str = "model_features.csv") -> None:
+    def __init__(self, 
+                 mode = "inference",
+                 date_col: str = "date", value_date_col: str = "value_date", model_features_path: str = "registry/model_features.csv") -> None:
         """
         Initializes the Preprocessor component.
 
@@ -26,9 +28,14 @@ class Preprocessor:
         print("====================================\n")
         self.date_col = date_col
         self.value_date_col = value_date_col
-        self.features = pd.read_csv(model_features_path)
-
-        print("- Expected raw model features:\n", self.features, "\n")
+        self.mode = mode
+        try:
+            self.features = pd.read_csv(model_features_path)
+            print("- Expected raw model features:\n", self.features, "\n")
+        except Exception as e:
+            print("Error loading model features:", e)
+            print("This is expected behaviour if it is the first time the model is being trained.")
+        
         print("- Date col:", self.date_col)
         print("- Value date col:", self.value_date_col)
 
@@ -92,7 +99,7 @@ class Preprocessor:
         print_separator()
 
         # Final DataFrame
-        print("===== Dataframe post cleaning =====")
+        print("===== Dataframe post QA =====")
         print(df)
         return df
     
@@ -106,7 +113,27 @@ class Preprocessor:
         Returns:
             pd.DataFrame: The preprocessed DataFrame.
         """
-        self.check_columns_exist(X, self.features)
+        # If training, separate a fraction of the dataset for future inference (outsample data)
+        if self.mode == "training":
+            outsample_fraction = 0.01
+            print(f"Separating the last {outsample_fraction}% of data for future inference")
+            
+            N = int(len(X) * outsample_fraction)
+            outsample_data = X.tail(N)
+            
+            X = X.head(len(X) - N)
+            print("Shapes for raw_data:", X.shape, "| Shape for out of sample: ", outsample_data.shape)
+            
+            # Save the out of sample data as parquet to perform "batch inference later"
+            outsample_data.to_parquet("data/bank_transactions_outsample.parquet")
+
+        # column validation for preprocessing if not the first time
+        try:
+            self.check_columns_exist(X, self.features)
+        except Exception as e:
+            print("Error during column matching.", e)
+            print("This might be the first time the model is being used. Skipping column check.")
+
         X = self.run_quality_checks(X)
         X = create_extra_features(X)
         X = decompose_dates(X, date_col=self.date_col, value_date_col=self.value_date_col)

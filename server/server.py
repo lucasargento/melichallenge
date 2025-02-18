@@ -3,13 +3,18 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 import pandas as pd
 import os
 from pipelines.inference_pipeline import run_inference
+from pipelines.training_pipeline import run_training
 
 app = FastAPI()
 
+def model_exists():
+    return any(fname.endswith('.pkl') for fname in os.listdir('registry'))
+
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    # Página de menú con dos botones
-    html_content = """
+    model_ready = model_exists()
+    # Página de menú con tres botones
+    html_content = f"""
     <!DOCTYPE html>
     <html>
     <head>
@@ -19,14 +24,47 @@ async def root():
     <body class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
         <h1 class="text-4xl font-bold mb-8">Menú de Inferencia</h1>
         <div class="space-x-4">
-            <button class="bg-white text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow hover:bg-blue-100 transition duration-300" onclick="location.href='/realtime_inference'">Realtime Inference Endpoint</button>
-            <button class="bg-white text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow hover:bg-blue-100 transition duration-300" onclick="location.href='/batch_inference'">Batch Inference Endpoint</button>
+            <button class="bg-white text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow hover:bg-blue-100 transition duration-300" onclick="location.href='/train_model'">Train Model</button>
+            <button class="bg-white text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow hover:bg-blue-100 transition duration-300" onclick="location.href='/realtime_inference'" {'disabled' if not model_ready else ''}>Realtime Inference Endpoint</button>
+            <button class="bg-white text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow hover:bg-blue-100 transition duration-300" onclick="location.href='/batch_inference'" {'disabled' if not model_ready else ''}>Batch Inference Endpoint</button>
         </div>
+        {'<p class="text-red-500 mt-4">Parece que no hay modelos en el Registry por ahora. Entrena tu primer modelo para testear la inferencia.</p>' if not model_ready else ''}
+    </body>
+    </html>
+    """
+
+    return HTMLResponse(content=html_content)
+
+@app.get("/train_model", response_class=HTMLResponse)
+async def train_model(request: Request, background_tasks: BackgroundTasks):
+    # Ejecutar el script de entrenamiento en segundo plano
+    background_tasks.add_task(run_training)
+    
+    # Mostrar una página de progreso
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Progreso del Entrenamiento</title>
+        <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+            .spinner { margin: 100px auto; width: 50px; height: 50px; border: 5px solid #ccc; border-top: 5px solid #1d72b8; border-radius: 50%; animation: spin 1s linear infinite; }
+            @keyframes spin { 100% { transform: rotate(360deg); } }
+        </style>
+    </head>
+    <body>
+        <h1>Entrenando el Modelo...</h1>
+        <div class="spinner"></div>
+        <p>Por favor, espera mientras entrenamos el modelo 🧠</p>
+        <script>
+            setTimeout(function() {
+                window.location.href = "/";
+            }, 101000);  // Redirigir a / después de 60 segundos
+        </script>
     </body>
     </html>
     """
     return HTMLResponse(content=html_content)
-
 
 @app.get("/batch_inference", response_class=HTMLResponse)
 async def batch_inference(request: Request, background_tasks: BackgroundTasks):
@@ -52,7 +90,7 @@ async def batch_inference(request: Request, background_tasks: BackgroundTasks):
         <script>
             setTimeout(function() {
                 window.location.href = "/inference_results";
-            }, 10000);  // Redirigir a /inference_results después de 10 segundos
+            }, 5000);  // Redirigir a /inference_results después de 10 segundos
         </script>
     </body>
     </html>
@@ -63,7 +101,7 @@ async def batch_inference(request: Request, background_tasks: BackgroundTasks):
 async def inference_results(request: Request):
     # Leer el archivo de resultados
     cwd = os.getcwd()
-    results_df = pd.read_csv(f"{cwd}/outputs/predictions.csv").head(10)
+    results_df = pd.read_csv(f"{cwd}/outputs/predictions.csv")
 
     # Convertir los resultados a HTML
     results_html = results_df.to_html(index=False, classes="table table-striped")
@@ -84,8 +122,8 @@ async def inference_results(request: Request):
         </style>
     </head>
     <body>
-        <h1>Resultados de la Inferencia: Prediccion de categorias de transacciones</h1>
-        <h2>Head del dataframe, ver resultados en la ultima columna</h2>
+        <h1>Prediccion de categorias de transacciones</h1>
+        <h2>Predicciones en la última columna</h2>
         <div>{results_html}</div>
     </body>
     </html>
@@ -109,7 +147,7 @@ async def realtime_inference():
     <body>
         <h1>Real-Time Inference</h1>
         <h1>🛠️</h1>
-        <p>Esta funcionalidad está todavía en construcción. ¡Vuelve pronto!</p>
+        <p>Esta funcionalidad está todavía en construcción. Vuelve Pronto!</p>
     </body>
     </html>
     """
