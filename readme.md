@@ -92,6 +92,8 @@ Ejecuta el script `run_inference.sh`, siguiendo estos pasos:
     ./run_inference.sh
     ```
 
+Lo mismo es válido para los scripts de run_server.sh y run_training.sh
+
 ## Cómo correr la WebApp Localmente
 
 Para ejecutar el servidor `server.py` de manera local, sigue estos pasos:
@@ -105,6 +107,8 @@ Para ejecutar el servidor `server.py` de manera local, sigue estos pasos:
     ```bash
     python server/server.py
     ```
+
+Tambien es posible correr el server de manera local corriendo el script run_server.sh
 
 ## Correr el server usando docker en local
 
