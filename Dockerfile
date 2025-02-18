@@ -1,25 +1,17 @@
-# Usar una imagen oficial de Miniconda con Python 3.11
-FROM continuumio/miniconda3:latest
+# Usa una imagen base de Python
+FROM python:3.11-slim
 
-# Establecer el directorio de trabajo
+# Establece el directorio de trabajo
 WORKDIR /app
 
-# Copiar y crear el entorno con Conda
-COPY environment.yml .
-RUN conda env create -f environment.yml
+# Copia los archivos de tu aplicación al contenedor
+COPY . /app
 
-# Asegurar que el entorno se usa por defecto
-ENV CONDA_DEFAULT_ENV=melichallenge
-ENV PATH="/opt/conda/envs/melichallenge/bin:$PATH"
+# Instala las dependencias
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar el código fuente al contenedor
-COPY . .
-
-# Exponer el puerto en el que se ejecutará el servidor
+# Expone el puerto 8000 para tráfico externo
 EXPOSE 8000
 
-# Usar bash en el CMD para que `conda` funcione correctamente
-SHELL ["/bin/bash", "-c"]
-
-# Comando para ejecutar el servidor FastAPI
+# Define el comando para ejecutar la app usando uvicorn
 CMD ["uvicorn", "server.server:app", "--host", "0.0.0.0", "--port", "8000"]

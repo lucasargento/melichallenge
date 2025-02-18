@@ -10,6 +10,10 @@ app = FastAPI()
 def model_exists():
     return any(fname.endswith('.pkl') for fname in os.listdir('registry'))
 
+def predictions_exist():
+    return any(fname.endswith('.csv') for fname in os.listdir('outputs'))
+
+
 @app.get("/", response_class=HTMLResponse)
 async def root():
     model_ready = model_exists()
@@ -21,14 +25,16 @@ async def root():
         <title>Menú de Inferencia</title>
         <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     </head>
-    <body class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+    <body class="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
         <h1 class="text-4xl font-bold mb-8">Menú de Inferencia</h1>
-        <div class="space-x-4">
+        <div class="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
             <button class="bg-white text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow hover:bg-blue-100 transition duration-300" onclick="location.href='/train_model'">Train Model</button>
             <button class="bg-white text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow hover:bg-blue-100 transition duration-300" onclick="location.href='/realtime_inference'" {'disabled' if not model_ready else ''}>Realtime Inference Endpoint</button>
             <button class="bg-white text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow hover:bg-blue-100 transition duration-300" onclick="location.href='/batch_inference'" {'disabled' if not model_ready else ''}>Batch Inference Endpoint</button>
         </div>
-        {'<p class="text-red-500 mt-4">Parece que no hay modelos en el Registry por ahora. Entrena tu primer modelo para testear la inferencia.</p>' if not model_ready else ''}
+        <div class="mt-4 text-center p-4">
+            {'<p class="text-red-500">Parece que no hay modelos en el Registry por ahora. Entrena tu primer modelo para testear la inferencia.</p>' if not model_ready else ''}
+        </div>
     </body>
     </html>
     """
@@ -57,14 +63,31 @@ async def train_model(request: Request, background_tasks: BackgroundTasks):
         <div class="spinner"></div>
         <p>Por favor, espera mientras entrenamos el modelo 🧠</p>
         <script>
-            setTimeout(function() {
-                window.location.href = "/";
-            }, 101000);  // Redirigir a / después de 60 segundos
+            async function checkModel() {
+                const response = await fetch('/check_model');
+                const data = await response.json();
+                if (data.model_ready) {
+                    window.location.href = "/";
+                } else {
+                    setTimeout(checkModel, 2000);  // Volver a chequear en 5 segundos
+                }
+            }
+            checkModel();
         </script>
     </body>
     </html>
     """
     return HTMLResponse(content=html_content)
+
+@app.get("/check_model")
+async def check_model():
+    model_ready = model_exists()
+    return {"model_ready": model_ready}
+
+@app.get("/check_predictions")
+async def check_model():
+    preds_ready = predictions_exist()
+    return {"preds_ready": preds_ready}
 
 @app.get("/batch_inference", response_class=HTMLResponse)
 async def batch_inference(request: Request, background_tasks: BackgroundTasks):
@@ -87,10 +110,17 @@ async def batch_inference(request: Request, background_tasks: BackgroundTasks):
         <h1>Realizando Inferencia...</h1>
         <div class="spinner"></div>
         <p>Por favor, espera mientras nuestros modelos piensan 🧠</p>
-        <script>
-            setTimeout(function() {
-                window.location.href = "/inference_results";
-            }, 5000);  // Redirigir a /inference_results después de 10 segundos
+            <script>
+            async function checkModel() {
+                const response = await fetch('/check_predictions');
+                const data = await response.json();
+                if (data.preds_ready) {
+                    window.location.href = "/inference_results";
+                } else {
+                    setTimeout(checkModel, 2000);  // Volver a chequear en 5 segundos
+                }
+            }
+            checkModel();
         </script>
     </body>
     </html>
@@ -119,6 +149,7 @@ async def inference_results(request: Request):
             th {{ background-color: #f4f4f4; }}
             table, th, td {{ border-radius: 8px; }}
             h2 {{ font-weight: normal; }}
+            div {{ padding-top: 20px; }}
         </style>
     </head>
     <body>

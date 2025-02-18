@@ -15,7 +15,7 @@ def run_training():
 
         
         print("\n\n============================")
-        print("Starting Inference Pipeline")
+        print("Starting Training Pipeline")
         print("============================\n\n")
 
         # pipeline steps
