@@ -141,4 +141,4 @@ Esto iniciará el servidor en un contenedor de Docker y expondrá la API en `htt
 - [ ] Realizar conexiones de datos reales a fuentes de datos en la nube /onprem como BigQuery o SQLServer, leer de tablas de input y escribir los resultados en tablas de output.
 - [ ] Desarrollar un pipeline de evaluacion de modelos que decida si promover o no un modelo cuando corre el pipeline de entrenamiento
 - [ ] Desarrollar un pipeline de monitoreo que verifique que no haya drifts a lo largo del tiempo. 
-- [ ] CI/CD con github actions para deployear y/o testear el codigo en ciertas branches o luego de PRs.
+- [ ] CI/CD con github actions para deployear y/o testear el codigo en ciertas branches o luego de PRs, precommit hooks y linters checks.
