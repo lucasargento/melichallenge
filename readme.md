@@ -17,6 +17,11 @@ Este repositorio contiene el código para el desafio Meli de Febrero 2024. El mi
 - Se generaró un "Model Registry" y "Conexiones a BigQuery" simuladas con directorios dentro del repositorio, para representar un caso de uso en la vida real, y que si en algun momento se optara por utilizar estos servicios u otros similiares, la integración sea mas sencilla.
 - En el flujo de entrenamiento + inferencia de la webapp, se separó una fracción del dataset raw (previo al entrenamiento) para utilizar como data out-of-sample sobre la cual predecir con el modelo entrenado, simulando datos "nuevos" que el mismo nunca vió.
 
+## Por donde empezar?
+
+- Leyendo el notebook de exploración y entrenamiento
+- Corriendo la webapp para probar el modelo (run_server.sh)
+
 ## Distribución del repositorio
 
 El repositorio está organizado de la siguiente manera:
