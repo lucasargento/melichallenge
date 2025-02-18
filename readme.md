@@ -20,7 +20,7 @@ Este repositorio contiene el código para el desafio Meli de Febrero 2024. El mi
 ## Por donde empezar?
 
 - Leyendo el notebook de exploración y entrenamiento
-- Corriendo la webapp para probar el modelo (run_server.sh)
+- Corriendo la webapp para probar el modelo con run_server.sh. Asegurarse que esten instaladas todas las dependencias y paquetes necesarios o bien correr la solucion dockerizada. Leer mas abajo los detalles :)
 
 ## Distribución del repositorio
 
